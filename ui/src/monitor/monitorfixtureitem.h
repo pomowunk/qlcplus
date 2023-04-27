@@ -127,7 +127,8 @@ protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
+    // void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
+    // QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
 private:
     void computeTiltPosition(FixtureHead *h, uchar value);

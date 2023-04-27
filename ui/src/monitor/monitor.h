@@ -27,6 +27,7 @@
 #include "monitorproperties.h"
 
 class MonitorGraphicsView;
+class MonitorFixtureItem;
 class MonitorFixture;
 class MonitorLayout;
 class QScrollArea;
@@ -172,7 +173,7 @@ protected:
     void hideFixtureItemEditor();
 
     /** Shows the Fixture Item editor on the right side of the view */
-    void showFixtureItemEditor();
+    void showFixtureItemEditor(MonitorFixtureItem *item);
 
 protected slots:
     /** Slot called when the grid width changes */
@@ -202,6 +203,10 @@ protected slots:
 
     /** Slot called when a fixture is moved in the graphics view */
     void slotFixtureMoved(quint32 fid, QPointF pos);
+
+    /** Slot called when a fixture is selected in the graphics view */
+    // void slotFixtureSelected(MonitorFixtureItem *item);
+    void slotSelectionChanged();
 
     /** Slot called when the graphics view is clicked */
     void slotViewClicked();

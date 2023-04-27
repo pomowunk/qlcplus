@@ -200,12 +200,15 @@ void Monitor::initGraphicsView()
     m_graphicsView = new MonitorGraphicsView(m_doc, this);
     m_graphicsView->setRenderHint(QPainter::Antialiasing);
     m_graphicsView->setAcceptDrops(true);
+    m_graphicsView->setDragMode(QGraphicsView::RubberBandDrag);
     m_graphicsView->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     m_graphicsView->setBackgroundBrush(QBrush(QColor(11, 11, 11, 255), Qt::SolidPattern));
     m_splitter->widget(0)->layout()->addWidget(m_graphicsView);
 
     connect(m_graphicsView, SIGNAL(fixtureMoved(quint32,QPointF)),
             this, SLOT(slotFixtureMoved(quint32,QPointF)));
+    connect(m_graphicsView, SIGNAL(selectionChanged()),
+            this, SLOT(slotSelectionChanged()));
     connect(m_graphicsView, SIGNAL(viewClicked(QMouseEvent*)),
             this, SLOT(slotViewClicked()));
 
@@ -782,20 +785,66 @@ void Monitor::slotFixtureMoved(quint32 fid, QPointF pos)
 {
     Q_ASSERT(m_graphicsView != NULL);
 
-    showFixtureItemEditor();
     m_props->setFixturePosition(fid, 0, 0, QVector3D(pos.x(), pos.y(), 0));
     m_doc->setModified();
+}
+
+// void Monitor::slotFixtureSelected(MonitorFixtureItem *item)
+// {
+//     Q_ASSERT(m_graphicsView != NULL);
+
+//     MonitorFixtureItem *fullSelection = m_graphicsView->getSelectedItem();
+//     if (fullSelection == item)
+//     {
+//         qDebug() << Q_FUNC_INFO << "showing editor()";
+//         showFixtureItemEditor(item);
+//     }
+//     else
+//     {
+//         qDebug() << Q_FUNC_INFO << "selection is null, hiding editor";
+//         hideFixtureItemEditor();
+//     }
+// }
+
+// void Monitor::slotEditFixture(MonitorFixtureItem *item)
+// {
+//     Q_ASSERT(m_graphicsView != NULL);
+
+//     MonitorFixtureItem *fullSelection = m_graphicsView->getSelectedItem();
+//     if (fullSelection == item)
+//     {
+//         qDebug() << Q_FUNC_INFO << "showing editor()";
+//         showFixtureItemEditor(item);
+//     }
+//     else
+//     {
+//         qDebug() << Q_FUNC_INFO << "selection is null, hiding editor";
+//         hideFixtureItemEditor();
+//     }
+// }
+
+void Monitor::slotSelectionChanged()
+{
+    Q_ASSERT(m_graphicsView != NULL);
+    
+    // QList<MonitorFixtureItem *> selected = getSelectedItems();
+    if (m_graphicsView->selectedItemsCount() == 1)
+        showFixtureItemEditor(m_graphicsView->getFirstSelectedItem());
+    else
+        hideFixtureItemEditor();
 }
 
 void Monitor::slotViewClicked()
 {
     Q_ASSERT(m_graphicsView != NULL);
 
+    qDebug() << Q_FUNC_INFO;
     hideFixtureItemEditor();
 }
 
 void Monitor::hideFixtureItemEditor()
 {
+    qDebug() << Q_FUNC_INFO;
     if (m_fixtureItemEditor != NULL)
     {
         m_splitter->widget(1)->layout()->removeWidget(m_fixtureItemEditor);
@@ -805,9 +854,9 @@ void Monitor::hideFixtureItemEditor()
     }
 }
 
-void Monitor::showFixtureItemEditor()
+void Monitor::showFixtureItemEditor(MonitorFixtureItem *item)
 {
-    MonitorFixtureItem *item = m_graphicsView->getSelectedItem();
+    qDebug() << Q_FUNC_INFO;
     hideFixtureItemEditor();
 
     if (item != NULL)

@@ -17,6 +17,8 @@
   limitations under the License.
 */
 
+#include <QDebug>
+
 #include "monitorproperties.h"
 #include "monitorgraphicsview.h"
 #include "monitorfixtureitem.h"
@@ -65,15 +67,6 @@ void MonitorGraphicsView::setGridMetrics(float value)
         it.next();
         updateFixture(it.key());
     }
-}
-
-quint32 MonitorGraphicsView::selectedFixtureID()
-{
-    MonitorFixtureItem *item = getSelectedItem();
-    if (item != NULL)
-        return item->fixtureID();
-    else
-        return Fixture::invalidId();
 }
 
 QList<quint32> MonitorGraphicsView::fixturesID() const
@@ -163,17 +156,26 @@ void MonitorGraphicsView::setBackgroundImage(QString filename)
     updateGrid();
 }
 
-MonitorFixtureItem *MonitorGraphicsView::getSelectedItem()
+int MonitorGraphicsView::selectedItemsCount()
 {
-    QHashIterator <quint32, MonitorFixtureItem*> it(m_fixtures);
-    while (it.hasNext() == true)
-    {
-        it.next();
-        MonitorFixtureItem *item = it.value();
-        if (item->isSelected() == true)
-            return item;
-    }
+    return m_scene->selectedItems().count();
+}
+
+MonitorFixtureItem* MonitorGraphicsView::getFirstSelectedItem()
+{
+    if (selectedItemsCount() > 0)
+        return (MonitorFixtureItem *)m_scene->selectedItems()[0];
     return NULL;
+}
+
+QList<MonitorFixtureItem *> MonitorGraphicsView::getSelectedItems()
+{
+    QList<MonitorFixtureItem *> items;
+    for (QGraphicsItem *graphicsItem : m_scene->selectedItems())
+    {
+        items.append((MonitorFixtureItem *)graphicsItem);
+    }
+    return items;
 }
 
 void MonitorGraphicsView::addFixture(quint32 id, QPointF pos)
@@ -200,9 +202,15 @@ bool MonitorGraphicsView::removeFixture(quint32 id)
 
     if (id == Fixture::invalidId())
     {
-        item = getSelectedItem();
-        if (item != NULL)
-            id = item->fixtureID();
+        QList<quint32> idList;
+        for (MonitorFixtureItem *item : getSelectedItems())
+            idList.append(item->fixtureID());
+
+        bool success = false;
+        for (quint32 selectedId : idList)
+            success |= removeFixture(selectedId);
+
+        return success;
     }
     else
         item = m_fixtures[id];
@@ -289,23 +297,52 @@ void MonitorGraphicsView::resizeEvent(QResizeEvent *event)
 
 void MonitorGraphicsView::mouseReleaseEvent(QMouseEvent *e)
 {
-    emit viewClicked(e);
-
+    qDebug() << Q_FUNC_INFO;
     QGraphicsView::mouseReleaseEvent(e);
+    
+    // bool rubberbandSelectionEnding = !rubberBandRect().isNull();
+    // if (rubberbandSelectionEnding)
+    // {
+        qDebug() << Q_FUNC_INFO << "emit selectionchanged";
+        emit selectionChanged();
+    // }
+    // else
+    // {
+    //     qDebug() << Q_FUNC_INFO << "emit viewclicked";
+    //     emit viewClicked(e);
+    // }
+
 }
 
-void MonitorGraphicsView::slotFixtureMoved(MonitorFixtureItem *item)
+void MonitorGraphicsView::slotFixtureMoved(MonitorFixtureItem *)
 {
-    quint32 fid = m_fixtures.key(item);
+    qDebug() << Q_FUNC_INFO;
+    bool anyHasMoved = false;
+    for (MonitorFixtureItem *item : getSelectedItems())
+    {
+        qDebug() << Q_FUNC_INFO << "moving" << item->fixtureID();
+        
+        // Convert the pixel position of the fixture into
+        // position in millimeters
+        QPointF mmPos;
+        mmPos.setX(((item->x() - m_xOffset) * m_unitValue) / m_cellPixels);
+        mmPos.setY(((item->y() - m_yOffset) * m_unitValue) / m_cellPixels);
 
-    // Convert the pixel position of the fixture into
-    // position in millimeters
-    QPointF mmPos;
-    mmPos.setX(((item->x() - m_xOffset) * m_unitValue) / m_cellPixels);
-    mmPos.setY(((item->y() - m_yOffset) * m_unitValue) / m_cellPixels);
+        if (item->realPosition() != mmPos)
+        {
+            qDebug() << Q_FUNC_INFO << "emit fixtureMoved";
+            // update the fixture item's real position
+            item->setRealPosition(mmPos);
 
-    // update the fixture item's real position
-    item->setRealPosition(mmPos);
+            quint32 fid = m_fixtures.key(item);
+            emit fixtureMoved(fid, mmPos);
+            anyHasMoved = true;
+        }
+    }
 
-    emit fixtureMoved(fid, mmPos);
+    if (!anyHasMoved)
+    {
+        qDebug() << Q_FUNC_INFO << "emit selectionChanged";
+        emit selectionChanged();
+    }
 }

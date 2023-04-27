@@ -50,16 +50,18 @@ public:
     /** Set the measure unit to use */
     void setGridMetrics(float value);
 
-    /** Get the currently selected fixture ID.
-     *  Fixture::invalidId is returned if none is selected */
-    quint32 selectedFixtureID();
-
     /** Return a list of the fixture IDs in the current view */
     QList <quint32> fixturesID() const;
 
+    /** Return the number of selected items */
+    int selectedItemsCount();
+
     /** Retrieve the currently selected MonitorFixtureItem.
      *  Return NULL if none */
-    MonitorFixtureItem *getSelectedItem();
+    MonitorFixtureItem * getFirstSelectedItem();
+    
+    /** Retrieve the currently selected MonitorFixtureItems */
+    QList<MonitorFixtureItem *> getSelectedItems();
 
     /** Set the gel color of the fixture with the given ID */
     void setFixtureGelColor(quint32 id, QColor col);
@@ -110,14 +112,25 @@ protected:
 
 public slots:
     void mouseReleaseEvent(QMouseEvent * e);
+    void rubberBandChanged(QRect rubberBandRect, QPointF, QPointF);
 
 protected slots:
     /** Slot called when a MonitorFixtureItem is dropped after a drag */
-    void slotFixtureMoved(MonitorFixtureItem * item);
+    void slotFixtureMoved(MonitorFixtureItem *);
+    
+    /** Slot called when a MonitorFixtureItem is selected */
+    // void slotFixtureSelected(MonitorFixtureItem * item);
+    // void slotSelectionChanged();
 
 signals:
     /** Signal emitted after fixture point -> metrics conversion */
     void fixtureMoved(quint32 id, QPointF pos);
+    
+    /** Signal emitted after fixture is selected */
+    // void fixtureSelected(MonitorFixtureItem *item);
+    
+    /** Signal emitted when the selection changes */
+    void selectionChanged();
 
     /** Signal emitted when the graphics view is clicked */
     void viewClicked(QMouseEvent * e);

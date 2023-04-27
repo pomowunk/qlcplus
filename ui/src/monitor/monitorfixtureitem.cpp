@@ -589,7 +589,11 @@ void MonitorFixtureItem::paint(QPainter *painter, const QStyleOptionGraphicsItem
 void MonitorFixtureItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsItem::mousePressEvent(event);
-    this->setSelected(true);
+    qDebug() << Q_FUNC_INFO;
+    // if (event->modifiers().testFlag(Qt::ControlModifier) && this->isSelected)
+    //     this->setSelected(false);
+    // else
+    //     this->setSelected(true);
 }
 
 void MonitorFixtureItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -597,12 +601,20 @@ void MonitorFixtureItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsItem::mouseReleaseEvent(event);
     qDebug() << Q_FUNC_INFO << "mouse RELEASE event - <" << event->pos().toPoint().x() << "> - <" << event->pos().toPoint().y() << ">";
     setCursor(Qt::OpenHandCursor);
-    emit itemDropped(this);
+    if (isSelected())
+        emit itemDropped(this);
 }
 
-void MonitorFixtureItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *)
-{
-}
+// void MonitorFixtureItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *)
+// {
+// }
+
+// QVariant MonitorFixtureItem::itemChange(GraphicsItemChange change, const QVariant &value)
+// {
+//     if (change == QGraphicsItem::ItemSelectedChange && value == true)
+//         emit itemSelected(this);
+//     return QGraphicsItem::itemChange(change, value);
+// }
 
 void MonitorFixtureItem::computeTiltPosition(FixtureHead *h, uchar value)
 {
