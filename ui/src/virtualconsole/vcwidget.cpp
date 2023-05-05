@@ -1222,7 +1222,7 @@ void VCWidget::move(const QPoint& point)
 
 QPoint VCWidget::lastClickPoint() const
 {
-    return m_mousePressPoint;
+    return mapFromGlobal(m_mousePressPoint);
 }
 
 /*****************************************************************************
@@ -1313,16 +1313,15 @@ void VCWidget::mousePressEvent(QMouseEvent* e)
         }
         else
         {
-            m_mousePressPoint = QPoint(e->pos().x(), e->pos().y());
-            m_moveStartGlobal = e->globalPos();
+            m_mousePressPoint = e->globalPos();
             setCursor(QCursor(Qt::SizeAllCursor));
         }
     }
     else if (e->button() & Qt::RightButton)
     {
         /* Menu invocation */
-        m_mousePressPoint = QPoint(e->pos().x(), e->pos().y());
-        invokeMenu(mapToGlobal(e->pos()));
+        m_mousePressPoint = e->globalPos();
+        invokeMenu(m_mousePressPoint);
     }
 }
 
@@ -1409,7 +1408,7 @@ void VCWidget::mouseMoveEvent(QMouseEvent* e)
                 m_moveBounds = vc->moveSelectedWidgetsBounds().translated(pos());
             }
 
-            QPoint delta = e->globalPos() - m_moveStartGlobal - m_moveAccumulated;
+            QPoint delta = e->globalPos() - m_mousePressPoint - m_moveAccumulated;
 
             /* Respect the minimum movement ranges of any selected widget */
             QPoint boundedPos(

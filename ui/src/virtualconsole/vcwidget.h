@@ -615,7 +615,6 @@ protected:
     bool m_resizeMode;
 
     bool m_moveStarted;
-    QPoint m_moveStartGlobal;
     QPoint m_moveAccumulated;
     QRect m_moveBounds;
 
