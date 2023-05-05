@@ -953,6 +953,36 @@ void VCWidget_Test::mousePress()
     stub->mouseMoveEvent(&e2);
     QTest::qWait(10);
     QCOMPARE(stub->pos(), QPoint(10, 10));
+
+    QMouseEvent e3(QEvent::MouseButtonRelease,
+                   QPoint(20, 20), QPoint(0, 0), stub->mapToGlobal(QPoint(20, 20)),
+                   Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+    stub->mouseMoveEvent(&e3);
+    QTest::qWait(10);
+
+    StubWidget* stub2 = new StubWidget(vc->contents(), m_doc);
+    stub2->show();
+    stub2->move(QPoint(30, 30));
+    stub2->resize(QSize(20, 20));
+    QCOMPARE(stub2->pos(), QPoint(30, 30));
+
+    QMouseEvent e4(QEvent::MouseButtonPress,
+                   QPoint(10, 10), QPoint(0, 0), stub2->mapToGlobal(QPoint(10, 10)),
+                   Qt::LeftButton, Qt::NoButton, Qt::ShiftModifier);
+    stub2->mousePressEvent(&e4);
+    QCOMPARE(vc->selectedWidgets().size(), 2);
+    QCOMPARE(vc->selectedWidgets()[0], stub);
+    QCOMPARE(vc->selectedWidgets()[1], stub2);
+    QCOMPARE(stub2->lastClickPoint(), QPoint(10, 10));
+    QTest::qWait(10);
+
+    QMouseEvent e5(QEvent::MouseMove,
+                   QPoint(30, 20), QPoint(0, 0), stub2->mapToGlobal(QPoint(30, 20)),
+                   Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+    stub2->mouseMoveEvent(&e5);
+    QTest::qWait(10);
+    QCOMPARE(stub->pos(), QPoint(30, 20));
+    QCOMPARE(stub2->pos(), QPoint(50, 40));
 }
 
 void VCWidget_Test::acceptInput()
