@@ -359,6 +359,17 @@ signals:
     void keyReleased(const QKeySequence& keySequence);
 
     /*********************************************************************
+     * move selected widgets handler
+     *********************************************************************/
+
+public:
+    /** Calculate the minimum movement range of selected widgets */
+    QRect moveSelectedWidgetsBounds();
+
+    /** Move the other selected widgets to follow the moved widget */
+    void moveSelectedWidgets(const QPoint& delta, VCWidget* movedWidget);
+
+    /*********************************************************************
      * Main application mode
      *********************************************************************/
 private:

@@ -1623,6 +1623,43 @@ void VirtualConsole::keyReleaseEvent(QKeyEvent* event)
     event->accept();
 }
 
+/*********************************************************************
+ * VCWidget move selected handler
+ *********************************************************************/
+
+QRect VirtualConsole::moveSelectedWidgetsBounds()
+{
+    qint32 minDX = -contents()->width();
+    qint32 minDY = -contents()->height();
+    qint32 maxDX = contents()->width();
+    qint32 maxDY = contents()->height();
+
+    VCWidget* selectedWidget;
+    foreach(selectedWidget, m_selectedWidgets)
+    {
+        VCWidget* parentWidget = qobject_cast<VCWidget*> (selectedWidget->parentWidget());
+
+        minDX = qMax(minDX, -selectedWidget->x());
+        minDY = qMax(minDY, -selectedWidget->y());
+        maxDX = qMin(maxDX, parentWidget->width() - selectedWidget->x() - selectedWidget->width());
+        maxDY = qMin(maxDY, parentWidget->height() - selectedWidget->y() - selectedWidget->height());
+    }
+
+    return QRect(QPoint(minDX, minDY), QPoint(maxDX, maxDY));
+}
+
+void VirtualConsole::moveSelectedWidgets(const QPoint& delta, VCWidget* movedWidget)
+{
+    VCWidget* widget;
+    foreach(widget, m_selectedWidgets)
+    {
+        if (widget == movedWidget)
+            continue;
+
+        widget->move(widget->pos() + delta);
+    }
+}
+
 /*****************************************************************************
  * Main application mode
  *****************************************************************************/

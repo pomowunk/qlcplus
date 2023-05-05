@@ -82,6 +82,7 @@ VCWidget::VCWidget(QWidget* parent, Doc* doc)
     m_frameStyle = KVCFrameStyleNone;
 
     m_resizeMode = false;
+    m_moveStarted = false;
 
     setBackgroundRole(QPalette::Window);
     setAutoFillBackground(true);
@@ -1313,6 +1314,7 @@ void VCWidget::mousePressEvent(QMouseEvent* e)
         else
         {
             m_mousePressPoint = QPoint(e->pos().x(), e->pos().y());
+            m_moveStartGlobal = e->globalPos();
             setCursor(QCursor(Qt::SizeAllCursor));
         }
     }
@@ -1367,6 +1369,7 @@ void VCWidget::mouseReleaseEvent(QMouseEvent* e)
     {
         unsetCursor();
         m_resizeMode = false;
+        m_moveStarted = false;
         setMouseTracking(false);
     }
     else
@@ -1395,11 +1398,34 @@ void VCWidget::mouseMoveEvent(QMouseEvent* e)
         }
         else if (e->buttons() & Qt::LeftButton || e->buttons() & Qt::MiddleButton)
         {
-            QPoint p = mapToParent(e->pos());
-            p.setX(p.x() - m_mousePressPoint.x());
-            p.setY(p.y() - m_mousePressPoint.y());
+            /* No point coming here if there is no VC */
+            VirtualConsole* vc = VirtualConsole::instance();
+            if (vc == NULL)
+                return;
 
-            move(p);
+            if (!m_moveStarted) {
+                m_moveStarted = true;
+                m_moveAccumulated = QPoint(0, 0);
+                m_moveBounds = vc->moveSelectedWidgetsBounds().translated(pos());
+            }
+
+            QPoint delta = e->globalPos() - m_moveStartGlobal - m_moveAccumulated;
+
+            /* Respect the minimum movement ranges of any selected widget */
+            QPoint boundedPos(
+                qBound(m_moveBounds.x(), x() + delta.x(), m_moveBounds.x() + m_moveBounds.width()),
+                qBound(m_moveBounds.y(), y() + delta.y(), m_moveBounds.y() + m_moveBounds.height())
+            );
+
+            /* Use the existing placement logic for grid snapping and parent area */
+            QPoint posBefore = pos();
+            move(boundedPos);
+            QPoint actualDelta = pos() - posBefore;
+            m_moveAccumulated += actualDelta;
+
+            /* Move the other selected widgets */
+            vc->moveSelectedWidgets(actualDelta, this);
+
             m_doc->setModified();
         }
     }
